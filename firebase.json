@@ -1,1 +1,29 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"canteen-crave-ea379","appId":"1:289690525643:android:98c88b476e7c5ad7a7a04e","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"canteen-crave-ea379","configurations":{"android":"1:289690525643:android:98c88b476e7c5ad7a7a04e","ios":"1:289690525643:ios:0e43ab7f52fe8974a7a04e","macos":"1:289690525643:ios:0e43ab7f52fe8974a7a04e","web":"1:289690525643:web:3a971f2f89771676a7a04e","windows":"1:289690525643:web:c2399863e8265a79a7a04e"}}}}}}
+﻿{
+    "flutter":  {
+                    "platforms":  {
+                                      "android":  {
+                                                      "default":  {
+                                                                      "projectId":  "canteen-crave-ea379",
+                                                                      "appId":  "1:289690525643:android:98c88b476e7c5ad7a7a04e",
+                                                                      "fileOutput":  "android/app/google-services.json"
+                                                                  }
+                                                  },
+                                      "dart":  {
+                                                   "lib/firebase_options.dart":  {
+                                                                                     "projectId":  "canteen-crave-ea379",
+                                                                                     "configurations":  {
+                                                                                                            "android":  "1:289690525643:android:98c88b476e7c5ad7a7a04e",
+                                                                                                            "ios":  "1:289690525643:ios:0e43ab7f52fe8974a7a04e",
+                                                                                                            "macos":  "1:289690525643:ios:0e43ab7f52fe8974a7a04e",
+                                                                                                            "web":  "1:289690525643:web:3a971f2f89771676a7a04e",
+                                                                                                            "windows":  "1:289690525643:web:c2399863e8265a79a7a04e"
+                                                                                                        }
+                                                                                 }
+                                               }
+                                  }
+                },
+    "firestore":  {
+                      "indexes":  "firestore.indexes.json",
+                      "rules":  "firestore.rules"
+                  }
+}
