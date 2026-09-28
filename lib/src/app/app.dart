@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../screens/vendor_auth/vendor_login_screen.dart';
 
 class CanteenCraveApp extends StatelessWidget {
   const CanteenCraveApp({super.key});
@@ -8,9 +9,19 @@ class CanteenCraveApp extends StatelessWidget {
     return MaterialApp(
       title: 'Canteen Crave',
       debugShowCheckedModeBanner: false,
-      home: const Scaffold(
-        body: Center(child: Text('Canteen Crave — setup OK')),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF121418),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFFF6B00),
+          secondary: Color(0xFFFFB300),
+          surface: Color(0xFF1E222A),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E222A),
+          elevation: 0,
+        ),
       ),
+      home: const VendorLoginScreen(),
     );
   }
 }
