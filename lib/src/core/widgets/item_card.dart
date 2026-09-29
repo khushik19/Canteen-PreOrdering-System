@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'status_badge.dart';
 
 /// Generic card for displaying a food item.
@@ -38,7 +38,7 @@ class ItemCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -55,8 +55,8 @@ class ItemCard extends StatelessWidget {
                   child: Image.network(
                     imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      color: theme.colorScheme.surfaceContainerHighest,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: theme.colorScheme.surfaceVariant,
                       child: const Icon(Icons.fastfood, size: 32),
                     ),
                   ),
@@ -99,7 +99,7 @@ class ItemCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        'â‚¹${price.toStringAsFixed(0)}',
+                        '₹${price.toStringAsFixed(0)}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -109,7 +109,7 @@ class ItemCard extends StatelessWidget {
                       if (originalPrice != null) ...[
                         const SizedBox(width: 6),
                         Text(
-                          'â‚¹${originalPrice!.toStringAsFixed(0)}',
+                          '₹${originalPrice!.toStringAsFixed(0)}',
                           style: const TextStyle(
                             fontSize: 12,
                             decoration: TextDecoration.lineThrough,
@@ -128,4 +128,3 @@ class ItemCard extends StatelessWidget {
     );
   }
 }
-
