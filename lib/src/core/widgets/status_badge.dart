@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 enum OrderStatusType { accepted, preparing, ready, completed, rejected }
 
@@ -8,7 +8,7 @@ class StatusBadge extends StatelessWidget {
 
   const StatusBadge({super.key, required this.text, required this.color});
 
-  /// Convenience constructor for order statuses — keeps colors consistent
+  /// Convenience constructor for order statuses â€” keeps colors consistent
   /// everywhere the badge is used (Profile, Vendor Dashboard).
   factory StatusBadge.orderStatus(OrderStatusType status) {
     switch (status) {
@@ -38,7 +38,7 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -52,3 +52,4 @@ class StatusBadge extends StatelessWidget {
     );
   }
 }
+
