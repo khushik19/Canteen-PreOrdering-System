@@ -1,4 +1,4 @@
-name: canteen_crave
+﻿name: canteen_crave
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.13.2
+  sdk: ^3.11.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -42,9 +42,11 @@ dependencies:
   razorpay_flutter: ^1.4.7
   provider: ^6.1.5+1
   intl: ^0.20.3
-  cached_network_image: ^4.0.2
+  cached_network_image: ^3.4.1
   flutter_local_notifications: ^22.3.1
   image_picker: ^1.2.3
+  go_router: ^14.8.1
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -98,3 +100,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+
+
