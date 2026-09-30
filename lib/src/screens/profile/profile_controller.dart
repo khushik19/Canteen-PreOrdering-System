@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../models/user_model.dart';
-import '../../repositories/auth_repository.dart'; // Person A's repo — for updating profile fields
-import '../../services/storage_service.dart';
+import '../../../models/user_model.dart';
+import '../../../repositories/auth_repository.dart'; // Person A's repo â€” for updating profile fields
+import '../../../services/storage_service.dart';
 
 class ProfileController extends ChangeNotifier {
   final AuthRepository _authRepository;
