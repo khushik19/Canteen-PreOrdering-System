@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/widgets/widgets.dart';
-import '../../../models/user_model.dart';
+import '../../core/widgets/widgets.dart';
+import '../../models/user_model.dart';
 import 'profile_controller.dart';
 import 'widgets/edit_profile_sheet.dart';
 import 'widgets/order_dashboard_tab.dart';
