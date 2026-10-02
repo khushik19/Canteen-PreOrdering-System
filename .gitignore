@@ -66,3 +66,9 @@ lib/firebase_options.dart
 
 # Env files
 .env
+
+# Auto-generated Flutter platform plugin files
+**/generated_plugin_registrant.cc
+**/generated_plugin_registrant.h
+**/generated_plugin_registrant.swift
+**/generated_plugins.cmake
