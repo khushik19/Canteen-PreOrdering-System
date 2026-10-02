@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../repositories/order_repository.dart'; // Person B's repository
 
@@ -76,7 +76,7 @@ class _OrderList extends StatelessWidget {
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: orders.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final order = orders[index];
             return OrderStatusCard(
