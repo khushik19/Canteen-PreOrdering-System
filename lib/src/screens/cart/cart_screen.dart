@@ -102,7 +102,7 @@ class _CartScreenState extends State<CartScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                   sliver: SliverToBoxAdapter(
                     child: RecommendationCarousel(
-                      title: 'Complete Your Order',
+                      title: "While You're At It",
                       items: completeOrderItems,
                       onAdd: controller.addRecommendation,
                     ),
@@ -112,7 +112,7 @@ class _CartScreenState extends State<CartScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                   sliver: SliverToBoxAdapter(
                     child: RecommendationCarousel(
-                      title: 'For You',
+                      title: 'Your Next Craving',
                       items: forYouItems,
                       onAdd: controller.addRecommendation,
                     ),
@@ -160,7 +160,9 @@ class _CartScreenState extends State<CartScreen> {
       placedAt: DateTime.now(),
       pickupTime: controller.pickupMode == PickupMode.scheduled && controller.scheduledTime != null
           ? _resolveScheduledDateTime(controller.scheduledTime!)
-          : DateTime.now().add(Duration(minutes: controller.asapEstimateMinutes)),
+          // Canteen-hours-aware resolution (9:00 AM – 5:20 PM) — not a
+          // blind "now + prep" that could land outside operating hours.
+          : controller.resolveAsapPickupTime(),
       isAsap: controller.pickupMode == PickupMode.asap,
     );
 

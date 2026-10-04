@@ -17,82 +17,87 @@ class PickupTimeSelector extends StatefulWidget {
 }
 
 class _PickupTimeSelectorState extends State<PickupTimeSelector> {
-  static const _minutes = [0, 15, 30, 45];
-  static const _periods = ['AM', 'PM'];
-  static const _hours = [9, 10, 11, 12, 1, 2, 3, 4, 5]; // 9 AM – 5 PM, in order
+  // All hours the canteen is open, in display order. Each value is
+  // unambiguous within this window — "9" is only ever 9 AM, "12" is only
+  // ever 12 PM, "5" is only ever 5 PM — so AM/PM is fully determined by
+  // which hour is picked; it's never an independent choice.
+  static const _hours = [9, 10, 11, 12, 1, 2, 3, 4, 5];
 
   late final FixedExtentScrollController _hourCtrl;
   late final FixedExtentScrollController _minuteCtrl;
-  late final FixedExtentScrollController _periodCtrl;
 
   late int _hourIndex;
   late int _minuteIndex;
-  late int _periodIndex;
+
+  /// 5:00 PM and 5:15 PM are the only valid minute values at the 5 PM hour
+  /// (5:30/5:45 PM would be past the 5:20 PM close) — every other hour
+  /// gets the full set of 15-minute slots.
+  List<int> _minutesFor(int hour12) => _toHour24(hour12) == 17 ? const [0, 15] : const [0, 15, 30, 45];
+
+  /// 9, 10, 11 are AM; 12, 1, 2, 3, 4, 5 are PM — the only mapping that's
+  /// valid for a canteen open 9:00 AM – 5:20 PM.
+  int _toHour24(int hour12) {
+    if (hour12 == 9 || hour12 == 10 || hour12 == 11) return hour12;
+    return hour12 == 12 ? 12 : hour12 + 12;
+  }
+
+  String _periodLabel(int hour12) => (hour12 == 9 || hour12 == 10 || hour12 == 11) ? 'AM' : 'PM';
+
+  List<int> get _minutes => _minutesFor(_hours[_hourIndex]);
 
   @override
   void initState() {
     super.initState();
     final initial = widget.controller.scheduledTime ?? _roundedNow();
-    final hour12 = initial.hourOfPeriod == 0 ? 12 : initial.hourOfPeriod;
+    var hour12 = initial.hourOfPeriod == 0 ? 12 : initial.hourOfPeriod;
+    var minute = initial.minute - (initial.minute % 15);
+
+    // Fall back to opening time if "now" lands outside the canteen's
+    // hour set entirely (e.g. testing at 7 AM or 7 PM real time).
+    if (!_hours.contains(hour12)) hour12 = 9;
+    final minutes = _minutesFor(hour12);
+    if (!minutes.contains(minute)) minute = minutes.last;
+
     _hourIndex = _hours.indexOf(hour12);
-    if (_hourIndex == -1) _hourIndex = 0;
-    _minuteIndex = _minutes.indexOf(initial.minute - (initial.minute % 15));
-    if (_minuteIndex == -1) _minuteIndex = 0;
-    _periodIndex = initial.period == DayPeriod.am ? 0 : 1;
+    _minuteIndex = minutes.indexOf(minute);
 
     _hourCtrl = FixedExtentScrollController(initialItem: _hourIndex);
     _minuteCtrl = FixedExtentScrollController(initialItem: _minuteIndex);
-    _periodCtrl = FixedExtentScrollController(initialItem: _periodIndex);
   }
 
   @override
   void dispose() {
     _hourCtrl.dispose();
     _minuteCtrl.dispose();
-    _periodCtrl.dispose();
     super.dispose();
   }
 
   TimeOfDay _roundedNow() {
     final now = DateTime.now();
     final rounded = ((now.minute ~/ 15) + 1) * 15;
-    return TimeOfDay(hour: now.hour + rounded ~/ 60, minute: rounded % 60);
+    return TimeOfDay(hour: (now.hour + rounded ~/ 60) % 24, minute: rounded % 60);
   }
 
-  /// Earliest pickup time the kitchen can realistically fulfil: now plus
-  /// the longest prep time among items currently in the cart (from
-  /// CartItemModel.cookingTimeMinutes), rounded up to the next 15-min slot.
-  TimeOfDay _earliestFeasibleTime() {
-    final maxPrep = widget.controller.items.fold<int>(
-      0,
-      (max, item) => item.cookingTimeMinutes > max ? item.cookingTimeMinutes : max,
-    );
-    final earliest = DateTime.now().add(Duration(minutes: maxPrep));
-    final roundedMinute = (earliest.minute / 15).ceil() * 15;
-    return TimeOfDay(
-      hour: earliest.hour + roundedMinute ~/ 60,
-      minute: roundedMinute % 60,
-    );
-  }
+  TimeOfDay _currentSelection() =>
+      TimeOfDay(hour: _toHour24(_hours[_hourIndex]), minute: _minutes[_minuteIndex]);
 
-  TimeOfDay _currentSelection() {
-    final hour12 = _hours[_hourIndex];
-    final period = _periods[_periodIndex];
-    final hour24 = period == 'AM'
-        ? (hour12 == 12 ? 0 : hour12)
-        : (hour12 == 12 ? 12 : hour12 + 12);
-    return TimeOfDay(hour: hour24, minute: _minutes[_minuteIndex]);
-  }
+  void _onHourChanged(int newHourIndex) {
+    final newMinutes = _minutesFor(_hours[newHourIndex]);
+    final minuteNeedsClamping = _minuteIndex >= newMinutes.length;
+    final newMinuteIndex = minuteNeedsClamping ? newMinutes.length - 1 : _minuteIndex;
 
-  /// Canteen closes 5:20 PM, slots are 15-min aligned, and the slot must
-  /// also be no earlier than the kitchen can realistically prepare the
-  /// current cart.
-  bool _isFeasible(TimeOfDay t) {
-    final minutesOfDay = t.hour * 60 + t.minute;
-    const closing = 17 * 60 + 20;
-    if (minutesOfDay + 15 > closing) return false;
-    final earliest = _earliestFeasibleTime();
-    return minutesOfDay >= earliest.hour * 60 + earliest.minute;
+    setState(() {
+      _hourIndex = newHourIndex;
+      _minuteIndex = newMinuteIndex;
+    });
+    // Only the 5 PM hour shrinks the minute list (4 options -> 2), so
+    // this only actually snaps the minute wheel in that one transition.
+    if (minuteNeedsClamping) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _minuteCtrl.jumpToItem(newMinuteIndex);
+      });
+    }
   }
 
   void _confirm() => widget.controller.setScheduledTime(_currentSelection());
@@ -100,8 +105,6 @@ class _PickupTimeSelectorState extends State<PickupTimeSelector> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
-    final selection = _currentSelection();
-    final feasible = _isFeasible(selection);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,19 +124,17 @@ class _PickupTimeSelectorState extends State<PickupTimeSelector> {
           const SizedBox(height: 6),
           Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
-                  feasible
-                      ? 'Ready by the time you arrive'
-                      : 'Kitchen needs a bit more time — pick a later slot',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: feasible ? CartColors.textSecondary : CartColors.accent,
-                  ),
+                  'Every slot shown is within canteen hours',
+                  style: TextStyle(fontSize: 11.5, color: CartColors.textSecondary),
                 ),
               ),
+              // Always enabled: the wheel can only ever land on a valid
+              // 9:00 AM–5:15 PM slot by construction (see _hours/_minutesFor),
+              // so there's nothing left to block Confirm on.
               TextButton(
-                onPressed: feasible ? _confirm : null,
+                onPressed: _confirm,
                 child: const Text('Confirm'),
               ),
             ],
@@ -154,18 +155,18 @@ class _PickupTimeSelectorState extends State<PickupTimeSelector> {
         children: [
           Expanded(
             child: _ModeChip(
-              label: '⚡ ASAP · ~${controller.asapEstimateMinutes} min',
-              selected: controller.pickupMode == PickupMode.asap,
-              onTap: () => controller.setPickupMode(PickupMode.asap),
-            ),
-          ),
-          Expanded(
-            child: _ModeChip(
               label: controller.pickupMode == PickupMode.scheduled && controller.scheduledTime != null
                   ? '🕐 ${_formatTimeOfDay(controller.scheduledTime!)}'
                   : '🕐 Schedule',
               selected: controller.pickupMode == PickupMode.scheduled,
               onTap: () => controller.setPickupMode(PickupMode.scheduled),
+            ),
+          ),
+          Expanded(
+            child: _ModeChip(
+              label: '⚡ ASAP · ~${controller.asapEstimateMinutes} min',
+              selected: controller.pickupMode == PickupMode.asap,
+              onTap: () => controller.setPickupMode(PickupMode.asap),
             ),
           ),
         ],
@@ -199,7 +200,7 @@ class _PickupTimeSelectorState extends State<PickupTimeSelector> {
                 itemExtent: itemExtent,
                 itemCount: _hours.length,
                 labelBuilder: (i) => '${_hours[i]}',
-                onChanged: (i) => setState(() => _hourIndex = i),
+                onChanged: _onHourChanged,
               ),
               _wheelColumn(
                 scrollController: _minuteCtrl,
@@ -208,12 +209,20 @@ class _PickupTimeSelectorState extends State<PickupTimeSelector> {
                 labelBuilder: (i) => _minutes[i].toString().padLeft(2, '0'),
                 onChanged: (i) => setState(() => _minuteIndex = i),
               ),
-              _wheelColumn(
-                scrollController: _periodCtrl,
-                itemExtent: itemExtent,
-                itemCount: _periods.length,
-                labelBuilder: (i) => _periods[i],
-                onChanged: (i) => setState(() => _periodIndex = i),
+              // AM/PM is derived from the selected hour, not an
+              // independent wheel — this just displays it, centered to
+              // match the other two columns' look.
+              Expanded(
+                child: Center(
+                  child: Text(
+                    _periodLabel(_hours[_hourIndex]),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: CartColors.textPrimary,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

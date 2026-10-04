@@ -6,9 +6,19 @@ enum PickupMode { asap, scheduled }
 /// Holds all Cart screen state. It's a plain ChangeNotifier so it drops
 /// into Provider/Riverpod/Bloc later without rewriting the widgets.
 class CartController extends ChangeNotifier {
+  // Canteen operating window — single source of truth, shared by ASAP
+  // resolution and the scheduled-pickup wheel so the two can never drift
+  // out of sync with each other.
+  static const int openingMinutes = 9 * 60; // 9:00 AM
+  static const int closingMinutes = 17 * 60 + 20; // 5:20 PM
+
   final List<CartItemModel> items;
-  PickupMode pickupMode = PickupMode.asap;
-  TimeOfDay? scheduledTime;
+  PickupMode pickupMode = PickupMode.scheduled;
+  // Defaults to opening time so OrderModel.pickupTime is well-defined even
+  // if the student never touches the wheel (pickupMode now defaults to
+  // Scheduled, not ASAP) — the wheel's own initState reads this same
+  // value, so the UI and the order stay in sync from the first frame.
+  TimeOfDay? scheduledTime = const TimeOfDay(hour: 9, minute: 0);
 
   // TODO: replace with a real Smart Kitchen estimate from the backend
   // (current time + prep time + kitchen workload).
@@ -83,5 +93,36 @@ class CartController extends ChangeNotifier {
     scheduledTime = time;
     pickupMode = PickupMode.scheduled;
     notifyListeners();
+  }
+
+  int get _maxPrepMinutes => items.fold<int>(
+        0,
+        (max, item) => item.cookingTimeMinutes > max ? item.cookingTimeMinutes : max,
+      );
+
+  /// Earliest pickup minute-of-day (0–1439) the kitchen can realistically
+  /// fulfil right now, clamped to canteen operating hours
+  /// (9:00 AM – 5:20 PM). Returns null if there's no feasible slot left
+  /// today (too close to or past closing). Used by ASAP resolution below.
+  /// (The Scheduled wheel enforces operating hours structurally — its
+  /// hour/minute option lists only ever contain valid values — so it
+  /// doesn't need this real-clock-dependent check.)
+  int? earliestFeasibleMinuteOfDay() {
+    final now = DateTime.now();
+    final nowMinutes = now.hour * 60 + now.minute;
+    final rawEarliest = nowMinutes + _maxPrepMinutes;
+    final rounded = (rawEarliest / 15).ceil() * 15;
+    final clamped = rounded < openingMinutes ? openingMinutes : rounded;
+    if (clamped + 15 > closingMinutes) return null; // nothing feasible today
+    return clamped;
+  }
+
+  /// Resolves the actual DateTime for an ASAP order, constrained to
+  /// canteen operating hours — never a blind "now + prep" that could land
+  /// before opening or after closing.
+  DateTime resolveAsapPickupTime() {
+    final now = DateTime.now();
+    final minute = earliestFeasibleMinuteOfDay() ?? (closingMinutes - 15);
+    return DateTime(now.year, now.month, now.day, minute ~/ 60, minute % 60);
   }
 }
