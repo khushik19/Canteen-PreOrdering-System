@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_routes.dart';
@@ -10,25 +10,19 @@ import '../../screens/favourites/favourites_screen.dart';
 import '../../screens/cart/cart_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/team/team_screen.dart';
+import '../../screens/vendor_auth/vendor_login_screen.dart';
+import '../../screens/vendor_auth/vendor_register_screen.dart';
+import '../../screens/vendor_dashboard/vendor_main_nav_screen.dart';
 
 // ---------------------------------------------------------------------------
 // AppRouter — GoRouter configuration for the whole app.
-//
-// • Auth redirect is a TODO stub for now (we will wire it up in the auth
-//   task once AuthService exists).
-// • The bottom-nav shell will be added in the home task.
-// • For now every route is a simple full-screen page.
 // ---------------------------------------------------------------------------
 
 class AppRouter {
   AppRouter._();
 
   static final GoRouter router = GoRouter(
-    // Start on the login screen until auth redirect is wired up.
     initialLocation: AppRoutes.login,
-
-    // TODO: Add auth redirect once AuthService is built.
-    // redirect: (context, state) { ... },
 
     routes: [
       // --- Auth -----------------------------------------------------------
@@ -76,9 +70,26 @@ class AppRouter {
         name: 'team',
         builder: (context, state) => const TeamScreen(),
       ),
+
+      // --- Vendor screens (Person C) -------------------------------------
+      GoRoute(
+        path: AppRoutes.vendorDashboard,
+        name: 'vendorDashboard',
+        builder: (context, state) => const VendorMainNavScreen(vendorId: 'vendor_demo_101'),
+      ),
+      GoRoute(
+        path: AppRoutes.vendorLogin,
+        name: 'vendorLogin',
+        builder: (context, state) => const VendorLoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.vendorRegister,
+        name: 'vendorRegister',
+        builder: (context, state) => const VendorRegisterScreen(),
+      ),
     ],
 
-    // Nice error page instead of a crash when a route is not found.
+    // Error page
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Text(

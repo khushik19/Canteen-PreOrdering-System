@@ -1,4 +1,4 @@
-﻿import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import '../repositories/notification_repository.dart';
@@ -48,9 +48,8 @@ class NotificationService {
 
   Future<void> _setupLocalNotifications() async {
     if (kIsWeb) return; // flutter_local_notifications does not support web
-    // v19+ API: initialize() uses named 'settings' parameter
     await _localNotifications.initialize(
-      settings: const InitializationSettings(
+      const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       ),
       onDidReceiveNotificationResponse: (NotificationResponse response) {
@@ -73,18 +72,17 @@ class NotificationService {
     });
   }
 
-  /// Shows a local banner when a push arrives while the app is open â€”
+  /// Shows a local banner when a push arrives while the app is open
   /// FCM does not display foreground notifications automatically.
   void _listenForForegroundMessages() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
       if (notification != null) {
-        // v19+ API: show() uses fully named parameters
         _localNotifications.show(
-          id: notification.hashCode,
-          title: notification.title,
-          body: notification.body,
-          notificationDetails: const NotificationDetails(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          const NotificationDetails(
             android: AndroidNotificationDetails(
               'canteen_crave_channel',
               'Canteen Crave Notifications',

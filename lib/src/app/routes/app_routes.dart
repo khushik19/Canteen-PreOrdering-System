@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // AppRoutes — named route paths used by GoRouter.
 //
 // Usage:  context.go(AppRoutes.home);
@@ -25,6 +25,8 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String team    = '/team';
 
-  // --- Vendor (Person C will define sub-routes) ---------------------------
+  // --- Vendor (Person C) --------------------------------------------------
   static const String vendorDashboard = '/vendor';
+  static const String vendorLogin     = '/vendor/login';
+  static const String vendorRegister  = '/vendor/register';
 }
