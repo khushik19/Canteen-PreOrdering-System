@@ -46,7 +46,7 @@ class PayButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Pay',
+                const Text('Payy',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
                 Text('₹${total.toStringAsFixed(0)}',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
