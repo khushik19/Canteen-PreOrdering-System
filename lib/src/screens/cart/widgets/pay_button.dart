@@ -4,9 +4,15 @@ import '../cart_theme.dart';
 
 class PayButton extends StatelessWidget {
   final double total;
+  final String label;
   final VoidCallback onTap;
 
-  const PayButton({super.key, required this.total, required this.onTap});
+  const PayButton({
+    super.key,
+    required this.total,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

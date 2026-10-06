@@ -7,7 +7,16 @@ import 'cart_item_model.dart';
 /// IMPORTANT: this enum is a shared contract. Confirm these exact values
 /// with Person C and Person D before merge week — renaming a value later
 /// means touching three people's code.
-enum OrderStatus { placed, accepted, preparing, ready, completed, cancelled }
+enum OrderStatus {
+  placed,
+  accepted,
+  rejected,
+  expired,
+  preparing,
+  ready,
+  completed,
+  cancelled,
+}
 
 class OrderModel {
   final String id;
@@ -18,7 +27,9 @@ class OrderModel {
   final DateTime pickupTime; // ASAP resolves to an actual DateTime at placement
   final bool isAsap;
   OrderStatus status;
-  String? paymentId; // set once payment succeeds
+  final DateTime requestExpiresAt;
+  String? rejectionReason;
+  String? paymentId;
 
   OrderModel({
     required this.id,
@@ -29,6 +40,8 @@ class OrderModel {
     required this.pickupTime,
     required this.isAsap,
     this.status = OrderStatus.placed,
+    required this.requestExpiresAt,
+    this.rejectionReason,
     this.paymentId,
   });
 }

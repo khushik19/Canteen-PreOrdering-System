@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/cart_item_model.dart';
 import '../../models/order_model.dart';
-import '../payment/payment_screen.dart';
+import 'pending_approval/pending_approval_screen.dart';
 import 'cart_controller.dart';
 import 'cart_theme.dart';
 import 'widgets/cart_item_card.dart';
@@ -135,7 +135,8 @@ class _CartScreenState extends State<CartScreen> {
                   sliver: SliverToBoxAdapter(
                     child: PayButton(
                       total: controller.subtotal,
-                      onTap: () => _goToPayment(context),
+                      label: 'Request Order',
+                      onTap: () => _goToPendingApproval(context),
                     ),
                   ),
                 ),
@@ -148,27 +149,30 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  /// Builds an OrderModel from current cart state and hands off to Payment.
+  /// Builds an OrderModel from current cart state and hands off to Pending
+  /// Approval — the order is a *request* at this point, not a payment.
+  /// Payment only happens after the vendor accepts (see
+  /// screens/pending_approval/pending_approval_screen.dart).
   /// TODO: `id` and `userId` should come from the backend/auth once those
   /// exist — this generates a placeholder so the flow is testable now.
-  void _goToPayment(BuildContext context) {
+  void _goToPendingApproval(BuildContext context) {
     final order = OrderModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      userId: 'current-user', // TODO: from auth_service (Person A)
-      items: List.of(controller.items),
-      total: controller.subtotal,
-      placedAt: DateTime.now(),
-      pickupTime: controller.pickupMode == PickupMode.scheduled && controller.scheduledTime != null
-          ? _resolveScheduledDateTime(controller.scheduledTime!)
-          // Canteen-hours-aware resolution (9:00 AM – 5:20 PM) — not a
-          // blind "now + prep" that could land outside operating hours.
-          : controller.resolveAsapPickupTime(),
-      isAsap: controller.pickupMode == PickupMode.asap,
-    );
+  id: DateTime.now().millisecondsSinceEpoch.toString(),
+  userId: 'current-user',
+  items: List.of(controller.items),
+  total: controller.subtotal,
+  placedAt: DateTime.now(),
+pickupTime: controller.pickupMode == PickupMode.scheduled &&
+        controller.scheduledTime != null
+    ? _resolveScheduledDateTime(controller.scheduledTime!)
+    : controller.resolveAsapPickupTime(),
+isAsap: controller.pickupMode == PickupMode.asap,
+requestExpiresAt: DateTime.now().add(const Duration(minutes: 10)),
+);
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PaymentScreen(
+        builder: (_) => PendingApprovalScreen(
           order: order,
           // TODO: pull from the logged-in student's profile.
           studentName: 'Student',
