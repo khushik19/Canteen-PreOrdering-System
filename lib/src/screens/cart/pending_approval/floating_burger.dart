@@ -83,7 +83,6 @@ class _FloatingBurgerState extends State<FloatingBurger> with SingleTickerProvid
     final toScale = _randomIn(_scaleRange);
 
     // Vary duration a little so the wandering doesn't feel metronomic.
-    _controller.duration = Duration(milliseconds: 3200 + _rng.nextInt(2400));
     // (Shortened from the original 3200-5600ms range for a livelier feel.)
     _controller.duration = Duration(milliseconds: 2000 + _rng.nextInt(1400));
 
