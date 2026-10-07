@@ -56,7 +56,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
     super.initState();
     _status = widget.order.status;
 
-    _transitionCtrl = AnimationController(duration: const Duration(milliseconds: 400), vsync: this)
+    _transitionCtrl = AnimationController(duration: const Duration(milliseconds: 300), vsync: this)
       ..addStatusListener((status) {
         if (status != AnimationStatus.completed) return;
         setState(() {

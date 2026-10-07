@@ -27,11 +27,10 @@ class SideFrame extends StatelessWidget {
     required this.transitionAnimation,
   });
 
-  // How far the cluster travels during a transition. Deliberately modest
-  // (not a full screen height) — keeps the motion quick and cheap, and
-  // the brief's "enters from below" only needs to read as a conveyor
-  // pull-in, not a literal off-screen entrance.
-  static const _travelDistance = 170.0;
+  // How far the cluster travels during a transition. Scaled down to match
+  // the smaller illustrations and the shorter ~300ms duration — keeps the
+  // motion quick and cheap rather than a long traverse.
+  static const _travelDistance = 100.0;
 
   @override
   Widget build(BuildContext context) {
@@ -65,20 +64,42 @@ class _Cluster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        for (final preset in sideFramePresets)
-          Align(
-            alignment: preset.alignment,
-            child: Transform.rotate(
-              angle: preset.rotation,
-              child: Opacity(
-                opacity: preset.opacity,
-                child: FoodVisual(food: food, size: preset.size),
-              ),
-            ),
-          ),
-      ],
+    // On narrow (phone-width) screens the side illustrations read as too
+    // small at the same literal size used for wider test/desktop views —
+    // bump them up slightly so they still feel intentional, without
+    // growing them on wider screens where they're already proportionally
+    // bigger.
+    final isMobileWidth = MediaQuery.of(context).size.width < 600;
+    final sizeFactor = isMobileWidth ? 1.2 : 1.0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            for (final preset in sideFramePresets)
+              Builder(builder: (context) {
+                final size = preset.size * sizeFactor;
+                // Pixel bleed is relative to the image's own size, not the
+                // screen's — e.g. visibleFraction 0.4 always bleeds 60% of
+                // THIS image off the edge, regardless of how wide the
+                // viewport is.
+                final bleed = size * (1 - preset.visibleFraction);
+                return Positioned(
+                  top: constraints.maxHeight * preset.topFraction,
+                  left: preset.side == FrameSide.left ? -bleed : null,
+                  right: preset.side == FrameSide.right ? -bleed : null,
+                  child: Transform.rotate(
+                    angle: preset.rotation,
+                    child: Opacity(
+                      opacity: preset.opacity,
+                      child: FoodVisual(food: food, size: size),
+                    ),
+                  ),
+                );
+              }),
+          ],
+        );
+      },
     );
   }
 }
