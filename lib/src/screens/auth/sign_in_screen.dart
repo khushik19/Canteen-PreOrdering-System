@@ -95,7 +95,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     AuthTextField(
                       controller: _emailController,
                       label: 'Email',
-                      hintText: 'you@example.com',
+                      hintText: 'spiderman@marvelstudios.com',
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: Validators.email,
@@ -161,7 +161,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Sign In'),
+                            : const Text('Let\'s go'),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.l),

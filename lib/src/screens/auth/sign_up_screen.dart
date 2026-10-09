@@ -108,7 +108,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     AuthTextField(
                       controller: _nameController,
                       label: 'Full Name',
-                      hintText: 'John Doe',
+                      hintText: 'Peter Parker',
                       keyboardType: TextInputType.name,
                       validator: Validators.name,
                       enabled: !auth.isLoading,
@@ -136,7 +136,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     AuthTextField(
                       controller: _emailController,
                       label: 'Email',
-                      hintText: 'you@example.com',
+                      hintText: 'spiderman@marvelstudios.com',
                       keyboardType: TextInputType.emailAddress,
                       validator: Validators.email,
                       enabled: !auth.isLoading,

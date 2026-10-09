@@ -88,7 +88,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           const AuthHeader(tagline: 'Reset your password'),
           Text(
-            "Enter the email you signed up with and we'll send you a link to reset your password.",
+            "Are you trying to scam us? Be honest. If not, please enter the email you signed up with and we'll send you a link to reset your password.",
             style: AppTextStyles.body,
             textAlign: TextAlign.center,
           ),
