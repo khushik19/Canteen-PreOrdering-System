@@ -1,18 +1,20 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../core/theme/theme.dart';
+import '../screens/auth/auth_controller.dart';
 import 'routes/app_router.dart';
 
 // ---------------------------------------------------------------------------
-// CanteenCraveApp — the root widget of the application.
+// CanteenCraveApp - the root widget of the application.
 //
 // What it does:
-//   1. Uses MaterialApp.router with our GoRouter instance.
-//   2. Applies AppTheme.lightTheme so every screen gets our design tokens.
+//   1. Creates AuthController and provides it to the widget tree via provider.
+//   2. Gives the AuthController to the router (for redirect logic).
+//   3. Uses MaterialApp.router with GoRouter and our AppTheme.
 //
-// When we add providers (CampusProvider, AuthController, etc.), wrap this
-// with a MultiProvider. For now there are no providers, so we skip it
-// (MultiProvider crashes with an empty list).
+// The AuthController starts listening to Firebase auth state immediately
+// in its constructor, so persistent login is handled automatically.
 // ---------------------------------------------------------------------------
 
 class CanteenCraveApp extends StatelessWidget {
@@ -20,21 +22,28 @@ class CanteenCraveApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Wrap with MultiProvider once we have providers to add.
-    // return MultiProvider(
-    //   providers: [ ... ],
-    //   child: MaterialApp.router( ... ),
-    // );
-    return MaterialApp.router(
-      // --- App identity ---------------------------------------------------
-      title: 'Canteen Crave',
-      debugShowCheckedModeBanner: false,
+    // Wrap the app with ChangeNotifierProvider so every screen can
+    // access auth state via context.watch<AuthController>().
+    return ChangeNotifierProvider(
+      // Create the AuthController — it starts listening to Firebase
+      // auth state changes in its constructor.
+      create: (_) {
+        final authController = AuthController();
+        // Give the router access to the controller so it can do redirects.
+        AppRouter.setAuthController(authController);
+        return authController;
+      },
+      child: MaterialApp.router(
+        // --- App identity -------------------------------------------------
+        title: 'Canteen Crave',
+        debugShowCheckedModeBanner: false,
 
-      // --- Theme ----------------------------------------------------------
-      theme: AppTheme.lightTheme,
+        // --- Theme --------------------------------------------------------
+        theme: AppTheme.lightTheme,
 
-      // --- Routing (GoRouter) ---------------------------------------------
-      routerConfig: AppRouter.router,
+        // --- Routing (GoRouter) -------------------------------------------
+        routerConfig: AppRouter.router,
+      ),
     );
   }
 }

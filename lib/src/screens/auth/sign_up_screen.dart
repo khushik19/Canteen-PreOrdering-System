@@ -173,7 +173,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Text('Campus', style: AppTextStyles.body),
                     const SizedBox(height: AppSpacing.xs),
                     DropdownButtonFormField<String>(
-                      value: _selectedCampusId,
+                      initialValue: _selectedCampusId,
                       validator: Validators.campus,
                       decoration: const InputDecoration(
                         hintText: 'Select your campus',
@@ -197,7 +197,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.s),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
+                          color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(AppRadius.button),
                         ),
                         child: Text(
@@ -260,3 +260,4 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
+

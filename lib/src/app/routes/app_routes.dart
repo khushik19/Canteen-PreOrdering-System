@@ -1,5 +1,5 @@
 ﻿// ---------------------------------------------------------------------------
-// AppRoutes — named route paths used by GoRouter.
+// AppRoutes - named route paths used by GoRouter.
 //
 // Usage:  context.go(AppRoutes.home);
 //
@@ -12,8 +12,10 @@ class AppRoutes {
   AppRoutes._();
 
   // --- Auth ---------------------------------------------------------------
-  static const String login  = '/login';
-  static const String signup = '/signup';
+  static const String splash         = '/splash';
+  static const String login          = '/login';
+  static const String signup         = '/signup';
+  static const String forgotPassword = '/forgot-password';
 
   // --- Student main tabs --------------------------------------------------
   static const String home       = '/home';
