@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'package:canteen_crave/src/app/routes/app_routes.dart';
-import 'package:canteen_crave/src/core/theme/theme.dart';
-import 'package:canteen_crave/src/core/utils/auth_guard.dart';
-import 'package:canteen_crave/src/screens/auth/auth_controller.dart';
+import '../../core/state/campus_controller.dart';
+import '../../core/theme/theme.dart';
+import '../../screens/shared/campus_app_bar.dart';
+import '../../screens/shared/state_views.dart';
+import 'home_controller.dart';
+import 'widgets/bestseller_carousel.dart';
+import 'widgets/category_grid.dart';
+import 'widgets/team_footer.dart';
 
 // ---------------------------------------------------------------------------
-// HomeScreen — Home screen for students and guests.
+// HomeScreen — The main landing page for students and guests.
 //
-// Guest Mode details (from GUEST_MODE_CONTEXT.md Section 2.5):
-//   • Top bar campus indicator with "Browsing as guest" chip (disappears on login)
-//   • Top bar action:
-//       - Guests see a "Log in" button (icon + text on laptop, icon only on phone)
-//       - Logged-in users see the profile avatar -> /profile
-//   • Guest-guarded actions: calls requireLogin() when tapping actions
-//     that need an account (favourite, checkout).
+// Layout (single CustomScrollView = one lazy scroll, no nested-scroll issues):
+//   1. CampusAppBar (SliverAppBar — campus dropdown + profile/login action)
+//   2. "Bestsellers" section title
+//   3. BestsellerCarousel (or loading/empty/error state)
+//   4. "Categories" section title
+//   5. CategoryGrid (or loading/empty/error state)
+//   6. TeamFooter
+//
+// Data is loaded by HomeController, which auto-reloads via
+// ChangeNotifierProxyProvider whenever the campus changes.
 // ---------------------------------------------------------------------------
 
 class HomeScreen extends StatelessWidget {
@@ -24,198 +30,142 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Watch AuthController to update UI when auth state changes.
-    final auth = context.watch<AuthController>();
-    final isWideScreen = MediaQuery.sizeOf(context).width >= 600;
+    // context.select rebuilds only when campusId changes — not on every
+    // CampusController notify (avoids over-rebuilds).
+    final campusId = context.select<CampusController, String>(
+      (c) => c.campusId,
+    );
+
+    // Watch HomeController to rebuild when loading/error/data changes.
+    final ctrl = context.watch<HomeController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        titleSpacing: AppSpacing.m,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Campus indicator
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'PIMR UG',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                ),
-                SizedBox(width: AppSpacing.xs),
-                Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-              ],
+      body: CustomScrollView(
+        slivers: [
+          // ------------------------------------------------------------------
+          // 1. Top bar — campus picker + profile/login action
+          // ------------------------------------------------------------------
+          const SliverAppBar(
+            floating: true,
+            snap: true,
+            forceElevated: false,
+            backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
+            flexibleSpace: FlexibleSpaceBar(
+              // CampusAppBar is a PreferredSizeWidget that handles its own
+              // layout; we embed it here inside the flexible space.
+              collapseMode: CollapseMode.none,
+              background: CampusAppBar(),
             ),
+            toolbarHeight: kToolbarHeight,
+          ),
 
-            // Guest hint chip (only shown when browsing as guest)
-            if (auth.isGuest) ...[
-              const SizedBox(width: AppSpacing.s),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.s,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.visibility_outlined,
-                      size: 13,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Browsing as guest',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+          // ------------------------------------------------------------------
+          // 2. "Bestsellers" section title
+          // ------------------------------------------------------------------
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.m,
+                AppSpacing.l,
+                AppSpacing.m,
+                AppSpacing.s,
               ),
-            ],
-          ],
-        ),
-        actions: [
-          if (auth.isGuest) ...[
-            // On wide screens (laptop): icon + text "Log in"
-            if (isWideScreen)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.m),
-                child: OutlinedButton.icon(
-                  onPressed: () => context.go(AppRoutes.login),
-                  icon: const Icon(Icons.login_rounded, size: 18),
-                  label: const Text('Log in'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.button),
-                    ),
-                  ),
-                ),
-              )
-            else
-              // On phones: icon-only button with tooltip
-              IconButton(
-                icon: const Icon(Icons.login_rounded),
-                tooltip: 'Log in',
-                color: AppColors.primary,
-                onPressed: () => context.go(AppRoutes.login),
-              ),
-          ] else ...[
-            // Logged-in user: profile avatar -> /profile
-            IconButton(
-              icon: const Icon(Icons.account_circle_outlined),
-              tooltip: 'Profile',
-              color: AppColors.textDark,
-              onPressed: () => context.go(AppRoutes.profile),
-            ),
-            // Quick sign out for testing
-            IconButton(
-              icon: const Icon(Icons.logout_rounded),
-              tooltip: 'Sign out',
-              color: AppColors.textMuted,
-              onPressed: () => auth.signOut(),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-          ],
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.m),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.l),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      auth.isGuest
-                          ? Icons.explore_outlined
-                          : Icons.restaurant_menu_rounded,
-                      size: 54,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-                    Text(
-                      auth.isGuest ? 'Guest Exploration' : 'Welcome to Canteen Crave',
-                      style: AppTextStyles.title,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.s),
-                    Text(
-                      auth.isGuest
-                          ? 'You are browsing without an account. Try adding to cart freely, or test an account-required action below.'
-                          : 'Signed in as ${auth.currentUser?.name.isNotEmpty == true ? auth.currentUser!.name : auth.currentUser?.email ?? 'Student'}.',
-                      style: AppTextStyles.body.copyWith(color: AppColors.textMuted),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.l),
-
-                    // Test requireLogin: Heart / Favourite item
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final allowed = await requireLogin(
-                          context,
-                          message: 'Log in to save items to your favourites.',
-                        );
-                        if (!context.mounted) return;
-                        if (allowed) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Added to favourites!')),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.favorite_border_rounded, size: 20),
-                      label: const Text('Favourite an item (Test Login Guard)'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.m),
-
-                    // Test requireLogin: Place order / Checkout
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final allowed = await requireLogin(
-                          context,
-                          message: 'Log in to place your order.',
-                        );
-                        if (!context.mounted) return;
-                        if (allowed) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Proceeding to payment!')),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.shopping_bag_outlined, size: 20),
-                      label: const Text('Checkout / Place Order (Test Login Guard)'),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: Text('Bestsellers', style: AppTextStyles.titleSmall),
             ),
           ),
-        ),
+
+          // ------------------------------------------------------------------
+          // 3. Bestsellers carousel (with loading / empty / error states)
+          // ------------------------------------------------------------------
+          SliverToBoxAdapter(
+            child: _BestsellerSection(ctrl: ctrl, campusId: campusId),
+          ),
+
+          // ------------------------------------------------------------------
+          // 4. "Categories" section title
+          // ------------------------------------------------------------------
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.m,
+                AppSpacing.l,
+                AppSpacing.m,
+                AppSpacing.s,
+              ),
+              child: Text('Categories', style: AppTextStyles.titleSmall),
+            ),
+          ),
+
+          // ------------------------------------------------------------------
+          // 5. Category grid (with loading / empty / error states)
+          // ------------------------------------------------------------------
+          SliverToBoxAdapter(
+            child: _CategorySection(ctrl: ctrl, campusId: campusId),
+          ),
+
+          // ------------------------------------------------------------------
+          // 6. Footer
+          // ------------------------------------------------------------------
+          const SliverToBoxAdapter(child: TeamFooter()),
+
+          // Bottom safe area so the last item isn't hidden behind the nav bar.
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
+        ],
       ),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _BestsellerSection — Handles the 3 states for the bestseller data.
+// ---------------------------------------------------------------------------
+class _BestsellerSection extends StatelessWidget {
+  final HomeController ctrl;
+  final String campusId;
+
+  const _BestsellerSection({required this.ctrl, required this.campusId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (ctrl.isLoading) {
+      return const LoadingView(count: 4, height: 240);
+    }
+    if (ctrl.error != null) {
+      return ErrorView(
+        message: ctrl.error!,
+        onRetry: () => ctrl.retry(campusId),
+      );
+    }
+    if (ctrl.bestsellers.isEmpty) {
+      return const EmptyView(message: 'No bestsellers on this campus yet.');
+    }
+    return BestsellerCarousel(items: ctrl.bestsellers);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _CategorySection — Handles the 3 states for the categories data.
+// ---------------------------------------------------------------------------
+class _CategorySection extends StatelessWidget {
+  final HomeController ctrl;
+  final String campusId;
+
+  const _CategorySection({required this.ctrl, required this.campusId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (ctrl.isLoading) {
+      return const GridLoadingView(count: 9);
+    }
+    if (ctrl.error != null) {
+      // Error already shown above in bestsellers section; don't duplicate.
+      return const SizedBox.shrink();
+    }
+    if (ctrl.categories.isEmpty) {
+      return const EmptyView(message: 'No categories yet.');
+    }
+    return CategoryGrid(categories: ctrl.categories);
   }
 }
