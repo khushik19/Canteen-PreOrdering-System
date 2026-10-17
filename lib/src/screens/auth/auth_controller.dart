@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -10,17 +10,19 @@ import '../../repositories/auth_repository.dart';
 //
 //   unknown         → app just started, checking if user is already logged in
 //   unauthenticated → no user is signed in
+//   guest           → user is exploring without an account (in-memory only)
 //   authenticated   → user is signed in, currentUser is available
 // ---------------------------------------------------------------------------
 
-enum AuthStatus { unknown, unauthenticated, authenticated }
+enum AuthStatus { unknown, unauthenticated, guest, authenticated }
 
 // ---------------------------------------------------------------------------
 // AuthController — the ChangeNotifier that the whole app reads for auth state.
 //
 // Usage (in a widget):
 //   final auth = context.watch<AuthController>();
-//   if (auth.status == AuthStatus.authenticated) { ... }
+//   if (auth.isLoggedIn) { ... }
+//   if (auth.isGuest) { ... }
 //   auth.currentUser?.name
 //
 // The router uses `refreshListenable: authController` so it re-evaluates
@@ -35,6 +37,12 @@ class AuthController extends ChangeNotifier {
   /// Current auth status. Starts as `unknown` while we check Firebase.
   AuthStatus _status = AuthStatus.unknown;
   AuthStatus get status => _status;
+
+  /// True if the user is exploring as a guest without an account.
+  bool get isGuest => _status == AuthStatus.guest;
+
+  /// True if the user is logged into an account.
+  bool get isLoggedIn => _status == AuthStatus.authenticated;
 
   /// The logged-in user's data from Firestore. Null when signed out.
   UserModel? _currentUser;
@@ -181,13 +189,25 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  // --- Guest mode ---------------------------------------------------------
+
+  /// Enables guest mode: sets status to guest and clears any errors.
+  /// Allows the user to browse without an account (in-memory only).
+  void continueAsGuest() {
+    _status = AuthStatus.guest;
+    _clearError();
+    notifyListeners();
+  }
+
   // --- Sign out -----------------------------------------------------------
 
   /// Signs out and clears local state.
-  /// The auth state listener will set status to `unauthenticated`.
+  /// Sets status to `unauthenticated` so the user lands on the login screen.
   Future<void> signOut() async {
     await _repository.signOut();
-    // The _onAuthStateChanged listener handles the rest.
+    _currentUser = null;
+    _status = AuthStatus.unauthenticated;
+    notifyListeners();
   }
 
   // --- Helpers ------------------------------------------------------------

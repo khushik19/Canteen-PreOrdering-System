@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -162,6 +162,60 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                               )
                             : const Text('Let\'s go'),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+
+                    // --- "or" divider ---
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.m,
+                          ),
+                          child: Text(
+                            'or',
+                            style: AppTextStyles.caption,
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.m),
+
+                    // --- Explore as guest button ---
+                    SizedBox(
+                      height: 52,
+                      child: Semantics(
+                        button: true,
+                        label: 'Explore as guest',
+                        child: OutlinedButton(
+                          onPressed: auth.isLoading
+                              ? null
+                              : () {
+                                  auth.continueAsGuest();
+                                  if (context.mounted) {
+                                    context.go(AppRoutes.home);
+                                  }
+                                },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.button,
+                              ),
+                            ),
+                            textStyle: AppTextStyles.button.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          child: const Text('Explore as guest'),
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.l),
