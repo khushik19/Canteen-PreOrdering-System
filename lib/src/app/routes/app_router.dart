@@ -175,7 +175,10 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.menu,
                   name: 'menu',
-                  builder: (context, state) => const MenuScreen(),
+                  builder: (context, state) {
+                    final categoryId = state.uri.queryParameters['category'];
+                    return MenuScreen(initialCategoryId: categoryId);
+                  },
                 ),
               ],
             ),
